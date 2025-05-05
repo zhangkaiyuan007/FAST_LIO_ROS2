@@ -652,8 +652,8 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
     trans.header.frame_id = "odom";
     trans.child_frame_id = "base_link";
     trans.header.stamp = odomAftMapped.header.stamp; 
-    trans.transform.translation.x = odomAftMapped.pose.pose.position.x + 0.175;
-    trans.transform.translation.y = odomAftMapped.pose.pose.position.y;
+    trans.transform.translation.x = odomAftMapped.pose.pose.position.x;
+    trans.transform.translation.y = odomAftMapped.pose.pose.position.y - 0.12;
     trans.transform.translation.z = odomAftMapped.pose.pose.position.z;
     trans.transform.rotation.w = odomAftMapped.pose.pose.orientation.w;
     trans.transform.rotation.x = odomAftMapped.pose.pose.orientation.x;
@@ -678,10 +678,8 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
     trans1.header.frame_id = "odom";
     trans1.child_frame_id = "base_footprint";
     trans1.header.stamp = odomAftMapped.header.stamp; 
-    trans1.transform.translation.x = odomAftMapped.pose.pose.position.x - 0.175* cos (yaw) + 0.175;
-    trans1.transform.translation.y = odomAftMapped.pose.pose.position.y - 0.175* sin (yaw);
-    // trans1.transform.translation.x = odomAftMapped.pose.pose.position.x;
-    // trans1.transform.translation.y = odomAftMapped.pose.pose.position.y;
+    trans1.transform.translation.x = odomAftMapped.pose.pose.position.x - 0.12 * sin (yaw);
+    trans1.transform.translation.y = odomAftMapped.pose.pose.position.y + 0.12 * cos (yaw) - 0.12;
     trans1.transform.translation.z = odomAftMapped.pose.pose.position.z;
     tf_br->sendTransform(trans1);
 }
