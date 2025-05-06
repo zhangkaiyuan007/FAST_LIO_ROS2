@@ -561,7 +561,7 @@ void publish_frame_body(rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::Shared
     sensor_msgs::msg::PointCloud2 laserCloudmsg;
     pcl::toROSMsg(*laserCloudIMUBody, laserCloudmsg);
     laserCloudmsg.header.stamp = get_ros_time(lidar_end_time);
-    laserCloudmsg.header.frame_id = "base_link";
+    laserCloudmsg.header.frame_id = "lidar";
     pubLaserCloudFull_body->publish(laserCloudmsg);
     publish_count -= PUBFRAME_PERIOD;
 }
@@ -632,7 +632,7 @@ void set_posestamp(T & out)
 void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMapped, std::unique_ptr<tf2_ros::TransformBroadcaster> & tf_br,const rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr pubFastLioYaw_)
 {
     odomAftMapped.header.frame_id = "odom";
-    odomAftMapped.child_frame_id = "base_link";
+    odomAftMapped.child_frame_id = "lidar_link";
     odomAftMapped.header.stamp = get_ros_time(lidar_end_time);
     set_posestamp(odomAftMapped.pose);
     pubOdomAftMapped->publish(odomAftMapped);
@@ -650,11 +650,11 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
 
     geometry_msgs::msg::TransformStamped trans;
     trans.header.frame_id = "odom";
-    trans.child_frame_id = "base_link";
+    trans.child_frame_id = "lidar_link";
     trans.header.stamp = odomAftMapped.header.stamp; 
     trans.transform.translation.x = odomAftMapped.pose.pose.position.x;
     trans.transform.translation.y = odomAftMapped.pose.pose.position.y - 0.12;
-    trans.transform.translation.z = odomAftMapped.pose.pose.position.z;
+    trans.transform.translation.z = odomAftMapped.pose.pose.position.z - 0.40;
     trans.transform.rotation.w = odomAftMapped.pose.pose.orientation.w;
     trans.transform.rotation.x = odomAftMapped.pose.pose.orientation.x;
     trans.transform.rotation.y = odomAftMapped.pose.pose.orientation.y;
@@ -675,13 +675,22 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
     pubFastLioYaw_->publish(yaw_message);
 
     geometry_msgs::msg::TransformStamped trans1;
-    trans1.header.frame_id = "odom";
-    trans1.child_frame_id = "base_footprint";
+    trans1.header.frame_id = "lidar_link";
+    trans1.child_frame_id = "base_link";
     trans1.header.stamp = odomAftMapped.header.stamp; 
-    trans1.transform.translation.x = odomAftMapped.pose.pose.position.x - 0.12 * sin (yaw);
-    trans1.transform.translation.y = odomAftMapped.pose.pose.position.y + 0.12 * cos (yaw) - 0.12;
-    trans1.transform.translation.z = odomAftMapped.pose.pose.position.z;
+    trans1.transform.translation.x = 0.0;
+    trans1.transform.translation.y = 0.12;
+    trans1.transform.translation.z = 0.0;
     tf_br->sendTransform(trans1);
+
+    geometry_msgs::msg::TransformStamped trans2;
+    trans2.header.frame_id = "base_link";
+    trans2.child_frame_id = "base_footprint";
+    trans2.header.stamp = odomAftMapped.header.stamp; 
+    trans2.transform.translation.x = 0.0;
+    trans2.transform.translation.y = 0.0;
+    trans2.transform.translation.z = 0.40;
+    tf_br->sendTransform(trans2);
 }
 
 void publish_path(rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath)
