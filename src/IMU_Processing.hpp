@@ -20,6 +20,7 @@
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
 #include "use-ikfom.hpp"
+#include <rclcpp/rclcpp.hpp>
 
 /// *************Preconfiguration
 
@@ -48,6 +49,7 @@ class ImuProcess
   void set_acc_bias_cov(const V3D &b_a);
   Eigen::Matrix<double, 12, 12> Q;
   void Process(const MeasureGroup &meas,  esekfom::esekf<state_ikfom, 12, input_ikfom> &kf_state, PointCloudXYZI::Ptr pcl_un_);
+  rclcpp::Publisher<nav_msgs::msg::Odometry>SharedPtr pub_odom_imu;
 
   ofstream fout_imu;
   V3D cov_acc;
@@ -285,6 +287,34 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
     {
       acc_s_last[i] += imu_state.grav[i];
     }
+    if(pub_odom_imu) 
+    {
+      auto odom_msg = std::make_shared<nav_msgs::msg::Odometry>();
+      odom_msg->header.stamp = tail->header.stamp;
+      odom_msg->header.frame_id = 'odom';
+      odom_msg->child_frame_id = 'base_link';  # 雷达坐标系                            
+      
+      odom_msg->pose.pose.position.x = imu_state.pos(0);
+      odom_msg->pose.pose.position.y = imu_state.pos(1);
+      odom_msg->pose.pose.position.z = imu_state.pos(2);
+
+      Eigen::Quaterniond q = imu_state.rot.unit_quaternion();
+      odom_msg->pose.pose.orientation.x = imu_state.q.x;
+      odom_msg->pose.pose.orientation.y = imu_state.q.y;
+      odom_msg->pose.pose.orientation.z = imu_state.q.z;
+      odom_msg->pose.pose.orientation.w = imu_state.q.w;
+
+      odom_msg->twist.twist.linear.x = imu_state.vel(0);
+      odom_msg->twist.twist.linear.y = imu_state.vel(1);
+      odom_msg->twist.twist.linear.z = imu_state.vel(2);
+
+      odom_msg->twist.twist.angular.x = imu_state.angvel_last(0);
+      odom_msg->twist.twist.angular.y = imu_state.angvel_last(1);
+      odom_msg->twist.twist.angular.z = imu_state.angvel_last(2); 
+
+      pub_odom_imu->publish(*odom_msg);
+    }
+
     double &&offs_t = tail_stamp - pcl_beg_time;
     IMUpose.push_back(set_pose6d(offs_t, acc_s_last, angvel_last, imu_state.vel, imu_state.pos, imu_state.rot.toRotationMatrix()));
   }
