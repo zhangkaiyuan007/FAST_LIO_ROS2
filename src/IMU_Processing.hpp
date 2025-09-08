@@ -49,7 +49,7 @@ class ImuProcess
   void set_acc_bias_cov(const V3D &b_a);
   Eigen::Matrix<double, 12, 12> Q;
   void Process(const MeasureGroup &meas,  esekfom::esekf<state_ikfom, 12, input_ikfom> &kf_state, PointCloudXYZI::Ptr pcl_un_);
-  rclcpp::Publisher<nav_msgs::msg::Odometry>SharedPtr pub_odom_imu;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pub_odom_imu;
 
   ofstream fout_imu;
   V3D cov_acc;
@@ -291,18 +291,18 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
     {
       auto odom_msg = std::make_shared<nav_msgs::msg::Odometry>();
       odom_msg->header.stamp = tail->header.stamp;
-      odom_msg->header.frame_id = 'odom';
-      odom_msg->child_frame_id = 'base_link';                             
+      odom_msg->header.frame_id = "odom";
+      odom_msg->child_frame_id = "base_link";                             
       
       odom_msg->pose.pose.position.x = imu_state.pos(0);
       odom_msg->pose.pose.position.y = imu_state.pos(1);
       odom_msg->pose.pose.position.z = imu_state.pos(2);
 
       Eigen::Quaterniond q(imu_state.rot.matrix());
-      odom_msg->pose.pose.orientation.x = imu_state.q.x;
-      odom_msg->pose.pose.orientation.y = imu_state.q.y;
-      odom_msg->pose.pose.orientation.z = imu_state.q.z;
-      odom_msg->pose.pose.orientation.w = imu_state.q.w;
+      odom_msg->pose.pose.orientation.x = q.x();
+      odom_msg->pose.pose.orientation.y = q.y();
+      odom_msg->pose.pose.orientation.z = q.z();
+      odom_msg->pose.pose.orientation.w = q.w();
 
       odom_msg->twist.twist.linear.x = imu_state.vel(0);
       odom_msg->twist.twist.linear.y = imu_state.vel(1);
