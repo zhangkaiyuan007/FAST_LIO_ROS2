@@ -970,6 +970,7 @@ public:
         pubPath_ = this->create_publisher<nav_msgs::msg::Path>("/path", 20);
         tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
         pubFastLioYaw_=this->create_publisher<std_msgs::msg::Float64>("fast_lio_yaw", rclcpp::SystemDefaultsQoS());
+        p_imu->pub_odom_imu = this->create_publisher<nav_msgs::msg::Odometry>("/odometry/imu", 20);
         //------------------------------------------------------------------------------------------------------
         auto period_ms = std::chrono::milliseconds(static_cast<int64_t>(1000.0 / 100.0));
         timer_ = rclcpp::create_timer(this, this->get_clock(), period_ms, std::bind(&LaserMappingNode::timer_callback, this));

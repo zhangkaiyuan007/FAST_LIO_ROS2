@@ -292,13 +292,13 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
       auto odom_msg = std::make_shared<nav_msgs::msg::Odometry>();
       odom_msg->header.stamp = tail->header.stamp;
       odom_msg->header.frame_id = 'odom';
-      odom_msg->child_frame_id = 'base_link';  # 雷达坐标系                            
+      odom_msg->child_frame_id = 'base_link';                             
       
       odom_msg->pose.pose.position.x = imu_state.pos(0);
       odom_msg->pose.pose.position.y = imu_state.pos(1);
       odom_msg->pose.pose.position.z = imu_state.pos(2);
 
-      Eigen::Quaterniond q = imu_state.rot.unit_quaternion();
+      Eigen::Quaterniond q(imu_state.rot.matrix());
       odom_msg->pose.pose.orientation.x = imu_state.q.x;
       odom_msg->pose.pose.orientation.y = imu_state.q.y;
       odom_msg->pose.pose.orientation.z = imu_state.q.z;
@@ -308,9 +308,9 @@ void ImuProcess::UndistortPcl(const MeasureGroup &meas, esekfom::esekf<state_ikf
       odom_msg->twist.twist.linear.y = imu_state.vel(1);
       odom_msg->twist.twist.linear.z = imu_state.vel(2);
 
-      odom_msg->twist.twist.angular.x = imu_state.angvel_last(0);
-      odom_msg->twist.twist.angular.y = imu_state.angvel_last(1);
-      odom_msg->twist.twist.angular.z = imu_state.angvel_last(2); 
+      odom_msg->twist.twist.angular.x = angvel_last(0);
+      odom_msg->twist.twist.angular.y = angvel_last(1);
+      odom_msg->twist.twist.angular.z = angvel_last(2); 
 
       pub_odom_imu->publish(*odom_msg);
     }
